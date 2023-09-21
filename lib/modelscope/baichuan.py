@@ -15,8 +15,8 @@ class ModelScopWrapper():
                 persist_directory=file_pah # Optional, defaults to .chromadb/ in the current directory
             ))
             self.db = self.client.get_or_create_collection('modelscope')
-            self.splitter = ChineseTextSplitter(pdf=False, sentence_size=1024)
-            pass
+            self.splitter = ChineseTextSplitter(pdf=False, sentence_size=1024) # use customized chinese text splitter to split the contents of load fie
+    
         
         #put knowledge data to db
         def put_data(self,text_list):
@@ -49,7 +49,7 @@ class ModelScopWrapper():
             self.db.add(embeddings=result['text_embedding'].tolist(), documents=input_text,ids=ids) 
             
         # query embedding results from vecotr db
-        def __vector_query(self,text):
+        def __vector_query(self,text,top):
             db= self.db
             input_text = [ text ]
             inputs = {
@@ -59,7 +59,7 @@ class ModelScopWrapper():
 
             result = db.query(
                 query_embeddings=result['text_embedding'].tolist()
-                ,n_results=5
+                ,n_results=top
             )
             return result
         
@@ -73,8 +73,8 @@ class ModelScopWrapper():
         
         
         # query results from knowldge base via llm
-        def query(self, text):
-            results = self.__vector_query(text)
+        def query(self, text, top):
+            results = self.__vector_query(text, top)
             contentext ='。\n'.join(results['documents'][0])+"."
             qa = """请根据上下文来回答问题，如果根据上下文的内容无法回答问题，请回答"我不知道"。不需要编造信息。
                     上下文：
